@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Flash Cards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .flash-card-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .progress-section {
+            margin-bottom: 30px;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .progress-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .card-counter {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .flash-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 40px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .flash-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .flash-card.flipped {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .card-type {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .flash-card.flipped .card-type {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .question {
+            font-size: 1.3rem;
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .answer {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .flip-hint {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .nav-button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .nav-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .completion-screen {
+            text-align: center;
+            padding: 60px 40px;
+        }
+
+        .completion-screen h2 {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .restart-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>JavaScript Flash Cards</h1>
+        <p>Test your JavaScript knowledge with interactive flash cards. Click on a card to reveal the answer!</p>
+    </div>
+
+    <div class="flash-card-container">
+        <div class="progress-section">
+            <div class="progress-info">
+                <span class="progress-text">Progress</span>
+                <span class="card-counter" id="cardCounter">1 of 15</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 6.67%"></div>
+            </div>
+        </div>
+
+        <div class="flash-card" id="flashCard" onclick="flipCard()">
+            <div class="card-type" id="cardType">Variables</div>
+            <div class="question" id="cardContent">
+                What is the difference between 'let', 'const', and 'var' in JavaScript?
+            </div>
+            <div class="flip-hint">💡 Click to reveal the answer</div>
+        </div>
+
+        <div class="navigation">
+            <button class="nav-button" id="prevBtn" onclick="previousCard()" disabled>← Previous</button>
+            <div>Card <span id="currentCard">1</span> of 15</div>
+            <button class="nav-button" id="nextBtn" onclick="nextCard()">Next →</button>
+        </div>
+    </div>
+
+    <script>
+        const flashCards = [
+            {
+                id: 1,
+                question: "What is the difference between 'let', 'const', and 'var' in JavaScript?",
+                answer: "'var' is function-scoped and can be redeclared and updated. 'let' is block-scoped and can be updated but not redeclared. 'const' is block-scoped, cannot be updated or redeclared, and must be initialized at declaration.",
+                category: "Variables"
+            },
+            {
+                id: 2,
+                question: "What is a closure in JavaScript?",
+                answer: "A closure is a function that has access to variables in its outer (enclosing) scope even after the outer function has returned. Closures are created every time a function is created.",
+                category: "Functions"
+            },
+            {
+                id: 3,
+                question: "What is the difference between '==' and '===' in JavaScript?",
+                answer: "'==' performs type coercion and compares values after converting them to the same type. '===' performs strict comparison without type coercion - both value and type must be the same.",
+                category: "Operators"
+            },
+            {
+                id: 4,
+                question: "What is 'hoisting' in JavaScript?",
+                answer: "Hoisting is JavaScript's behavior of moving variable and function declarations to the top of their containing scope during compilation. Variables declared with 'var' are hoisted and initialized with 'undefined', while 'let' and 'const' are hoisted but not initialized.",
+                category: "Concepts"
+            },
+            {
+                id: 5,
+                question: "What is the 'this' keyword in JavaScript?",
+                answer: "'this' refers to the object that is executing the current function. Its value depends on how the function is called: in methods it refers to the owner object, in functions it refers to the global object (or undefined in strict mode).",
+                category: "Concepts"
+            },
+            {
+                id: 6,
+                question: "What is an arrow function and how does it differ from regular functions?",
+                answer: "Arrow functions are a shorter syntax for writing functions. Key differences: they don't have their own 'this' binding, can't be used as constructors, don't have 'arguments' object, and cannot be hoisted.",
+                category: "Functions"
+            },
+            {
+                id: 7,
+                question: "What is the difference between 'null' and 'undefined'?",
+                answer: "'undefined' means a variable has been declared but not assigned a value. 'null' is an assignment value that represents no value or empty value. 'null' is an object type, while 'undefined' is undefined type.",
+                category: "Data Types"
+            },
+            {
+                id: 8,
+                question: "What is a Promise in JavaScript?",
+                answer: "A Promise is an object representing the eventual completion or failure of an asynchronous operation. It has three states: pending, fulfilled, or rejected. Promises help avoid callback hell and provide better error handling.",
+                category: "Async"
+            },
+            {
+                id: 9,
+                question: "What is the difference between 'map()', 'filter()', and 'reduce()' array methods?",
+                answer: "'map()' creates a new array with results of calling a function on every element. 'filter()' creates a new array with elements that pass a test. 'reduce()' executes a reducer function on each element, resulting in a single output value.",
+                category: "Arrays"
+            },
+            {
+                id: 10,
+                question: "What is event bubbling and event capturing?",
+                answer: "Event bubbling is when an event starts from the target element and bubbles up to the root. Event capturing is the opposite - the event starts from the root and goes down to the target. You can control this with the third parameter in addEventListener().",
+                category: "Events"
+            },
+            {
+                id: 11,
+                question: "What is the difference between synchronous and asynchronous JavaScript?",
+                answer: "Synchronous code executes line by line, blocking further execution until the current operation completes. Asynchronous code allows other operations to continue while waiting for the async operation to complete, using callbacks, promises, or async/await.",
+                category: "Async"
+            },
+            {
+                id: 12,
+                question: "What is destructuring in JavaScript?",
+                answer: "Destructuring is a syntax that allows you to extract values from arrays or properties from objects into distinct variables. It provides a clean way to unpack values: const [a, b] = array or const {name, age} = object.",
+                category: "ES6+"
+            },
+            {
+                id: 13,
+                question: "What is the spread operator (...) in JavaScript?",
+                answer: "The spread operator allows an iterable (like an array or string) to be expanded in places where zero or more arguments or elements are expected. It can be used for copying arrays, merging arrays, converting strings to arrays, etc.",
+                category: "ES6+"
+            },
+            {
+                id: 14,
+                question: "What is the difference between a function declaration and a function expression?",
+                answer: "Function declarations are hoisted and can be called before they're defined. Function expressions are not hoisted and cannot be called before they're defined. Function declarations create a variable in the current scope with the function name.",
+                category: "Functions"
+            },
+            {
+                id: 15,
+                question: "What is the prototype chain in JavaScript?",
+                answer: "The prototype chain is the mechanism by which JavaScript objects inherit properties and methods from other objects. Each object has a __proto__ property that points to its prototype, creating a chain that ends with Object.prototype.",
+                category: "Objects"
+            }
+        ];
+
+        let currentCardIndex = 0;
+        let isFlipped = false;
+
+        function updateCard() {
+            const card = flashCards[currentCardIndex];
+            const cardElement = document.getElementById('flashCard');
+            const cardType = document.getElementById('cardType');
+            const cardContent = document.getElementById('cardContent');
+            const cardCounter = document.getElementById('cardCounter');
+            const currentCard = document.getElementById('currentCard');
+            const progressFill = document.getElementById('progressFill');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            // Reset flip state
+            isFlipped = false;
+            cardElement.classList.remove('flipped');
+
+            // Update content
+            cardType.textContent = card.category;
+            cardContent.textContent = card.question;
+            cardContent.className = 'question';
+            
+            // Update progress
+            cardCounter.textContent = `${currentCardIndex + 1} of ${flashCards.length}`;
+            currentCard.textContent = currentCardIndex + 1;
+            progressFill.style.width = `${((currentCardIndex + 1) / flashCards.length) * 100}%`;
+
+            // Update navigation buttons
+            prevBtn.disabled = currentCardIndex === 0;
+            nextBtn.disabled = currentCardIndex === flashCards.length - 1;
+
+            // Update flip hint
+            const flipHint = cardElement.querySelector('.flip-hint');
+            flipHint.textContent = '💡 Click to reveal the answer';
+        }
+
+        function flipCard() {
+            const card = flashCards[currentCardIndex];
+            const cardElement = document.getElementById('flashCard');
+            const cardContent = document.getElementById('cardContent');
+            const flipHint = cardElement.querySelector('.flip-hint');
+
+            isFlipped = !isFlipped;
+
+            if (isFlipped) {
+                cardElement.classList.add('flipped');
+                cardContent.textContent = card.answer;
+                cardContent.className = 'answer';
+                flipHint.textContent = '🔄 Click to go back to question';
+            } else {
+                cardElement.classList.remove('flipped');
+                cardContent.textContent = card.question;
+                cardContent.className = 'question';
+                flipHint.textContent = '💡 Click to reveal the answer';
+            }
+        }
+
+        function nextCard() {
+            if (currentCardIndex < flashCards.length - 1) {
+                currentCardIndex++;
+                updateCard();
+            }
+        }
+
+        function previousCard() {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                updateCard();
+            }
+        }
+
+        // Initialize the first card
+        updateCard();
+    </script>
+</body>
+</html>
